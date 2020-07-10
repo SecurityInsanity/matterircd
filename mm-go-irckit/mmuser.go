@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/42wim/matterbridge/matterclient"
 	"github.com/42wim/matterircd/config"
+	"github.com/SecurityInsanity/matterbridge/matterclient"
 	"github.com/mattermost/mattermost-server/model"
 	"github.com/sorcix/irc"
 )
@@ -455,10 +455,14 @@ func (u *User) handleWsActionPost(rmsg *model.WebSocketEvent) {
 		if props["channel_type"] == "D" {
 			if data.UserId == u.mc.User.Id {
 				// we have to look in the mention to see who we are sending a message to
-				mentions := model.ArrayFromJson(strings.NewReader(props["mentions"].(string)))
-				if len(mentions) > 0 {
-					spoofUsername = u.mc.GetUserName(mentions[0])
-					u.MsgSpoofUser(u, spoofUsername, m)
+				if mentionsObj, ok := props["mentions"]; ok {
+					mentions := model.ArrayFromJson(strings.NewReader(mentionsObj.(string)))
+					if len(mentions) > 0 {
+						spoofUsername = u.mc.GetUserName(mentions[0])
+						u.MsgSpoofUser(u, spoofUsername, m)
+					}
+				} else {
+					u.MsgSpoofUser(ghost, spoofUsername, m)
 				}
 			} else {
 				u.MsgSpoofUser(ghost, spoofUsername, m)
